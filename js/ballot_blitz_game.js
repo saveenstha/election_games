@@ -32,15 +32,14 @@ const BALLOON_TYPES = {
     bomb:    { emoji: '💣', label: 'BOMB',    color: '#FF6B35', points: -20, hitsLife: false, isBomb: true,  weight: 14 },
 };
 
-const LEVEL_CONFIG = [
-    /* L1 */ { speed: 1.8, spawnRate: 1800, maxItems: 5  },
-    /* L2 */ { speed: 2.4, spawnRate: 1500, maxItems: 7  },
-    /* L3 */ { speed: 3.0, spawnRate: 1300, maxItems: 9  },
-    /* L4 */ { speed: 3.6, spawnRate: 1100, maxItems: 11 },
-    /* L5 */ { speed: 4.3, spawnRate:  950, maxItems: 13 },
-    /* L6 */ { speed: 5.1, spawnRate:  800, maxItems: 15 },
-    /* L7 */ { speed: 6.0, spawnRate:  700, maxItems: 17 },
-];
+function getLevelConfig(level) {
+    const l = level - 1; // 0-based
+    return {
+        speed:     1.8  + l * 0.55  + Math.floor(l / 5) * 0.4,
+        spawnRate: Math.max(300, 1800 - l * 120),
+        maxItems:  Math.min(5  + l * 2, 40),
+    };
+}
 
 const POINTS_PER_LEVEL = 100;
 const MAX_LIVES = 3;
@@ -174,7 +173,7 @@ document.addEventListener('keyup',   e => { keys[e.code] = false; });
 
 // ── Spawning ─────────────────────────────────────
 function spawnItem() {
-    const cfg  = LEVEL_CONFIG[Math.min(state.level - 1, LEVEL_CONFIG.length - 1)];
+    const cfg  = getLevelConfig(state.level);
     if (state.items.length >= cfg.maxItems) return;
 
     const type    = weightedRandom(BALLOON_TYPES);
@@ -242,7 +241,7 @@ function updateHUD() {
 // ── Level Up ─────────────────────────────────────
 function checkLevelUp() {
     const newLevel = Math.floor(state.score / POINTS_PER_LEVEL) + 1;
-    if (newLevel > state.level && newLevel <= LEVEL_CONFIG.length + 1) {
+    if (newLevel > state.level) {   // ← removed the upper cap entirely
         state.level = newLevel;
         updateHUD();
         showLevelUp(newLevel);
@@ -255,10 +254,15 @@ function showLevelUp(lvl) {
         'POLLS ARE WILD TODAY!', 'BALLOT CHAOS INCOMING!',
         'YOU\'RE UNSTOPPABLE!', 'LEGENDARY VOTE CATCHER!',
     ];
+    const msgIndex = lvl < msgs.length
+        ? lvl
+        : ((lvl - msgs.length) % 4) + (msgs.length - 4);
+
+
     document.getElementById('levelupText').textContent = `LEVEL ${lvl}`;
     document.getElementById('levelup-sub') && (document.getElementById('levelup-sub').textContent = msgs[lvl] || 'KEEP GOING!');
     const sub = screens.levelup.querySelector('.levelup-sub');
-    if (sub) sub.textContent = msgs[Math.min(lvl, msgs.length-1)];
+    if (sub) sub.textContent = msgs[msgIndex] || 'KEEP GOING!';
 
     screens.levelup.classList.add('active');
     // Reset animation
@@ -309,7 +313,7 @@ function loop(timestamp) {
 
     // Spawn
     state.spawnTimer += dt;
-    const spawnRate = LEVEL_CONFIG[Math.min(state.level - 1, LEVEL_CONFIG.length - 1)].spawnRate;
+    const spawnRate = getLevelConfig(state.level).spawnRate;
     if (state.spawnTimer >= spawnRate) {
         state.spawnTimer = 0;
         spawnItem();
