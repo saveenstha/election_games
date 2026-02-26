@@ -35,7 +35,7 @@ const BALLOON_TYPES = {
 function getLevelConfig(level) {
     const l = level - 1; // 0-based
     return {
-        speed:     1.8  + l * 0.55  + Math.floor(l / 5) * 0.4,
+        speed:     3 + l * 0.55  + Math.floor(l / 5) * 0.4,
         spawnRate: Math.max(300, 1800 - l * 120),
         maxItems:  Math.min(5  + l * 2, 40),
     };
@@ -575,7 +575,7 @@ document.getElementById('btnRestart').addEventListener('click', initGame);
 
 document.getElementById('btnHome').addEventListener('click', () => {
     cancelAnimationFrame(animId);
-    showScreen('start');
+    window.location.href = 'index.html';
 });
 
 // Keyboard pause
