@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>The Steady Hand Election — स्थिर हात निर्वाचन</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/steady_hand_style.css">
+</head>
+<body>
+<a href="{% url "home" %}" > Go to Home </a>
+
+<!-- ══════════════════════════════════════
+     SCREEN: START
+══════════════════════════════════════ -->
+<div id="screen-start" class="screen active">
+    <div class="desk-surface">
+        <div class="desk-grain"></div>
+
+        <div class="start-paper">
+            <div class="paper-header-stamp">
+                <div class="govt-seal">🏛️</div>
+                <div class="header-lines">
+                    <div class="header-np">निर्वाचन आयोग, नेपाल</div>
+                    <div class="header-en">Election Commission, Nepal</div>
+                </div>
+                <div class="govt-seal">🗳️</div>
+            </div>
+
+            <div class="divider-double"></div>
+
+            <h1 class="title-np">स्थिर हात निर्वाचन</h1>
+            <h2 class="title-en">THE STEADY HAND ELECTION</h2>
+
+            <div class="divider-single"></div>
+
+            <p class="tagline-np">मतपत्रमा सही छाप लगाउनुस् — लाइन नछुनुस्!</p>
+            <p class="tagline-en">Stamp the ballot perfectly — don't touch the line!</p>
+
+            <div class="divider-single"></div>
+
+            <div class="instructions-block">
+                <div class="instr-row">
+                    <span class="instr-num">१.</span>
+                    <span class="instr-text">सही पार्टी प्रतीक खोज्नुस् <span class="en">/ Find the correct party symbol</span></span>
+                </div>
+                <div class="instr-row">
+                    <span class="instr-num">२.</span>
+                    <span class="instr-text">कोठाको भित्री सीमाभित्र छाप लगाउनुस् <span class="en">/ Stamp entirely within the cell border</span></span>
+                </div>
+                <div class="instr-row">
+                    <span class="instr-num">३.</span>
+                    <span class="instr-text">लाइन छोयो भने मतपत्र अमान्य हुन्छ <span class="en">/ Touching any line spoils the ballot</span></span>
+                </div>
+            </div>
+
+            <div class="divider-double"></div>
+
+            <div class="mode-buttons">
+                <button class="btn-mode" data-mode="rush" id="btnRush">
+                    <div class="mode-icon">⚡</div>
+                    <div class="mode-np">प्रिसिन्क्ट रश</div>
+                    <div class="mode-en">Precinct Rush</div>
+                    <div class="mode-desc">५ मतपत्र · ६० सेकेन्ड · Speed</div>
+                </button>
+                <button class="btn-mode" data-mode="dim" id="btnDim">
+                    <div class="mode-icon">🕯️</div>
+                    <div class="mode-np">अँध्यारो बुथ</div>
+                    <div class="mode-en">Dimly Lit Booth</div>
+                    <div class="mode-desc">५ मतपत्र · ४५ सेकेन्ड · Hard</div>
+                </button>
+                <button class="btn-mode" data-mode="practice" id="btnPractice">
+                    <div class="mode-icon">📚</div>
+                    <div class="mode-np">अभ्यास</div>
+                    <div class="mode-en">Practice</div>
+                    <div class="mode-desc">असीमित · कुनै समय छैन · Learn</div>
+                </button>
+            </div>
+
+            <div class="divider-single"></div>
+            <p class="footer-note">🖱️ Mouse / Touch to aim &nbsp;·&nbsp; Click / Tap to stamp &nbsp;·&nbsp; 🔍 Magnifier for precision</p>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: GAME
+══════════════════════════════════════ -->
+<div id="screen-game" class="screen">
+    <!-- Top HUD bar -->
+    <div class="game-hud" id="gameHud">
+        <div class="hud-left">
+            <div class="hud-mode" id="hudMode">PRECINCT RUSH</div>
+            <div class="hud-ballot" id="hudBallot">मतपत्र १/५ · Ballot 1/5</div>
+        </div>
+        <div class="hud-center">
+            <div class="timer-wrap">
+                <svg class="timer-ring" viewBox="0 0 44 44" id="timerRing">
+                    <circle class="timer-track" cx="22" cy="22" r="18"/>
+                    <circle class="timer-fill" cx="22" cy="22" r="18" id="timerArc"/>
+                </svg>
+                <div class="timer-num" id="timerNum">60</div>
+            </div>
+        </div>
+        <div class="hud-right">
+            <div class="hud-score-label">अंक / Score</div>
+            <div class="hud-score" id="hudScore">0</div>
+        </div>
+    </div>
+
+    <!-- Target symbol panel -->
+    <div class="target-panel" id="targetPanel">
+        <div class="target-label-np">खोज्नुस् / Find:</div>
+        <div class="target-symbol" id="targetSymbol">☀️</div>
+        <div class="target-name-np" id="targetNameNp">सूर्य</div>
+        <div class="target-name-en" id="targetNameEn">Sun</div>
+    </div>
+
+    <!-- Magnifier toggle -->
+    <button class="btn-magnifier" id="btnMagnifier" title="Magnifier / आवर्धक">🔍</button>
+    <button class="btn-pause-game" id="btnPauseGame" title="Pause">⏸</button>
+
+    <!-- The main game canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Toast feedback -->
+    <div class="toast-wrap" id="toastWrap"></div>
+
+    <!-- Practice feedback panel -->
+    <div class="practice-panel" id="practicePanel" style="display:none">
+        <div class="pp-title">छाप विश्लेषण / Stamp Analysis</div>
+        <div class="pp-distances" id="ppDistances"></div>
+        <div class="pp-diagram-wrap">
+            <canvas id="ppDiagram" width="120" height="120"></canvas>
+        </div>
+        <div class="pp-verdict" id="ppVerdict"></div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: PAUSE
+══════════════════════════════════════ -->
+<div id="screen-pause" class="screen overlay-screen">
+    <div class="modal-paper">
+        <div class="modal-stamp-mark">⏸</div>
+        <h2 class="modal-title-np">रोकिएको छ</h2>
+        <h3 class="modal-title-en">PAUSED</h3>
+        <div class="divider-single"></div>
+        <button class="btn-paper-action" id="btnResume">▶ जारी राख्नुस् / Resume</button>
+        <button class="btn-paper-action secondary" id="btnQuitToHome">🏠 गृहपृष्ठ / Home</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: RESULTS
+══════════════════════════════════════ -->
+<div id="screen-results" class="screen">
+    <div class="desk-surface">
+        <div class="desk-grain"></div>
+        <div class="results-paper">
+            <div class="results-header">
+                <div class="results-stamp-icon" id="resultsIcon">📋</div>
+                <h2 class="results-title-np" id="resultsTitleNp">मतगणना सम्पन्न</h2>
+                <h3 class="results-title-en" id="resultsTitleEn">COUNTING COMPLETE</h3>
+            </div>
+            <div class="divider-double"></div>
+
+            <!-- Per ballot verdicts -->
+            <div class="verdicts-list" id="verdictsList"></div>
+
+            <div class="divider-single"></div>
+
+            <!-- Score summary -->
+            <div class="results-score-block">
+                <div class="score-line">
+                    <span class="score-lbl">कुल अंक / Total Score</span>
+                    <span class="score-val big" id="resFinalScore">0</span>
+                </div>
+                <div class="score-line">
+                    <span class="score-lbl">मान्य / Valid</span>
+                    <span class="score-val green" id="resValid">0/5</span>
+                </div>
+                <div class="score-line">
+                    <span class="score-lbl">समय बोनस / Time Bonus</span>
+                    <span class="score-val" id="resTimeBonus">+0</span>
+                </div>
+            </div>
+
+            <div class="divider-double"></div>
+
+            <!-- Official verdict -->
+            <div class="official-verdict" id="officialVerdict">
+                <div class="official-icon">👨‍⚖️</div>
+                <div class="verdict-msg" id="verdictMsg">The Election Official has reviewed your ballots.</div>
+            </div>
+
+            <div class="divider-single"></div>
+
+            <div class="results-actions">
+                <button class="btn-paper-action" id="btnPlayAgain">🗳️ फेरि खेल्नुस् / Play Again</button>
+                <button class="btn-paper-action secondary" id="btnResultsHome">🏠 गृहपृष्ठ / Home</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN: HOW TO PLAY
+══════════════════════════════════════ -->
+<div id="screen-howto" class="screen overlay-screen" style="display:none">
+    <div class="modal-paper wide">
+        <h2 class="modal-title-np">कसरी खेल्ने</h2>
+        <h3 class="modal-title-en">HOW TO PLAY</h3>
+        <div class="divider-single"></div>
+        <div class="howto-grid">
+            <div class="howto-row"><span class="howto-icon">🎯</span><span>सही प्रतीक भएको कोठा खोज्नुस् — Find the cell with the correct symbol</span></div>
+            <div class="howto-row"><span class="howto-icon">🖱️</span><span>माउस/औंला सार्नुस् छाप राख्न — Move mouse/finger to position the stamp</span></div>
+            <div class="howto-row"><span class="howto-icon">🖱️</span><span>क्लिक/ट्याप गर्नुस् छाप लगाउन — Click/Tap to stamp</span></div>
+            <div class="howto-row"><span class="howto-icon">✅</span><span>सम्पूर्ण छाप सीमाभित्र = मान्य — Entire stamp inside border = Valid (+20 pts)</span></div>
+            <div class="howto-row"><span class="howto-icon">❌</span><span>लाइन छोयो = अमान्य — Any edge touches line = Spoiled (0 pts)</span></div>
+            <div class="howto-row"><span class="howto-icon">🔍</span><span>आवर्धक बटन थिच्नुस् — Press magnifier button for zoomed view</span></div>
+        </div>
+        <div class="divider-single"></div>
+        <button class="btn-paper-action" id="btnHowtoClose">बुझें / Got It</button>
+    </div>
+</div>
+
+<script src="js/ballot.js"></script>
+<script src="js/stamp.js"></script>
+<script src="js/modes.js"></script>
+<script src="js/steady_hand_game.js"></script>
+</body>
+</html>

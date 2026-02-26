@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ballot Box Blitz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css" >
+</head>
+<body>
+
+<a href="{% url "home" %}" > Go to Home </a>
+
+
+<!-- SCREEN: START -->
+<div id="screen-start" class="screen active">
+    <div class="start-bg">
+        <div class="star-field" id="starField"></div>
+        <div class="confetti-bg" id="confettiBg"></div>
+    </div>
+    <div class="start-content">
+        <div class="logo-badge">🗳️</div>
+        <h1 class="game-title">BALLOT<br><span>BOX</span><br>BLITZ</h1>
+        <p class="game-subtitle">Catch valid ballots. Dodge the duds.<br>Save democracy — one paper at a time.</p>
+        <div class="instructions-card">
+            <div class="instr-row"><span class="instr-icon">✅</span><span>Catch <strong>VALID</strong> ballots for +10 pts</span></div>
+            <div class="instr-row"><span class="instr-icon">❌</span><span>Avoid <strong>SPOILED</strong> ballots — lose a life</span></div>
+            <div class="instr-row"><span class="instr-icon">⭐</span><span>Catch <strong>GOLDEN</strong> ballots for +30 pts</span></div>
+            <div class="instr-row"><span class="instr-icon">💣</span><span>Avoid <strong>BOMBS</strong> — instant -20 pts</span></div>
+            <div class="instr-row"><span class="instr-icon">🖱️</span><span>Move mouse / touch to control the box</span></div>
+        </div>
+        <div>
+            <button class="btn-start" id="btnStart">CAST YOUR VOTE!</button>
+            <a href="index.html"><button class="btn-home" id="btnHome">Go Back to Home</button></a>
+        
+        </div>
+        <p class="credit">Use arrow keys or mouse to move the ballot box</p>
+    </div>
+</div>
+
+<!-- SCREEN: GAME -->
+<div id="screen-game" class="screen">
+    <div class="hud">
+        <div class="hud-block">
+            <span class="hud-label">SCORE</span>
+            <span class="hud-value" id="hudScore">0</span>
+        </div>
+        <div class="hud-center">
+            <div class="lives-display" id="hudLives">
+                <span class="life">❤️</span>
+                <span class="life">❤️</span>
+                <span class="life">❤️</span>
+            </div>
+            <div class="level-tag" id="hudLevel">LEVEL 1</div>
+        </div>
+        <div class="hud-block right">
+            <span class="hud-label">BEST</span>
+            <span class="hud-value" id="hudBest">0</span>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="legend">
+        <span>✅ Valid +10</span>
+        <span>⭐ Golden +30</span>
+        <span>❌ Spoiled -life</span>
+        <span>💣 Bomb -20</span>
+    </div>
+
+    <!-- Floating score popups container -->
+    <div id="popupLayer"></div>
+
+    <!-- Pause button -->
+    <button class="btn-pause" id="btnPause">⏸</button>
+</div>
+
+<!-- SCREEN: PAUSE -->
+<div id="screen-pause" class="screen overlay-screen">
+    <div class="modal">
+        <h2>PAUSED</h2>
+        <p>Take a breather,<br>democracy can wait a moment.</p>
+        <button class="btn-modal" id="btnResume">▶ RESUME</button>
+        <button class="btn-modal secondary" id="btnQuit">🏠 QUIT</button>
+    </div>
+</div>
+
+<!-- SCREEN: GAME OVER -->
+<div id="screen-gameover" class="screen overlay-screen">
+    <div class="modal gameover-modal">
+        <div class="gameover-emoji" id="gameoverEmoji">📦</div>
+        <h2 id="gameoverTitle">POLLS CLOSED!</h2>
+        <p id="gameoverMsg">The counting is done.</p>
+        <div class="score-board">
+            <div class="score-row">
+                <span>Final Score</span>
+                <span id="finalScore" class="score-num">0</span>
+            </div>
+            <div class="score-row">
+                <span>Best Score</span>
+                <span id="finalBest" class="score-num best">0</span>
+            </div>
+            <div class="score-row">
+                <span>Level Reached</span>
+                <span id="finalLevel" class="score-num">1</span>
+            </div>
+            <div class="score-row">
+                <span>Ballots Caught</span>
+                <span id="finalCaught" class="score-num">0</span>
+            </div>
+        </div>
+        <button class="btn-modal" id="btnRestart">🗳️ VOTE AGAIN</button>
+        <button class="btn-modal secondary" id="btnHome">🏠 HOME</button>
+    </div>
+</div>
+
+<!-- SCREEN: LEVEL UP -->
+<div id="screen-levelup" class="screen overlay-screen transparent-overlay">
+    <div class="levelup-blast">
+        <div class="levelup-text" id="levelupText">LEVEL 2</div>
+        <div class="levelup-sub">THINGS ARE HEATING UP!</div>
+    </div>
+</div>
+
+<script src="js/ballot_blitz_game.js"></script>
+</body>
+</html>
