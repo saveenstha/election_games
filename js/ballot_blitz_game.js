@@ -210,7 +210,7 @@ function spawnItem() {
 
     const type     = weightedRandom(BALLOON_TYPES);
     const typeData = BALLOON_TYPES[type];
-    const size     = rndInt(36, 54);
+    const size     = rndInt(70, 100);
     const speed    = rnd(cfg.speed * 0.7, cfg.speed * 1.3);
 
     state.items.push({
