@@ -183,12 +183,16 @@ function generateBgStars() {
 
 // ── Input ────────────────────────────────────────
 let mouseX = -1;
+let usingMouse = false;
+
 const keys = {};
 
 document.addEventListener('mousemove', e => {
     if (!screens.game.classList.contains('active')) return;
     const rect = canvas.getBoundingClientRect();
     mouseX = e.clientX - rect.left;
+    usingMouse = true;
+
 });
 document.addEventListener('touchmove', e => {
     if (!screens.game.classList.contains('active')) return;
@@ -364,7 +368,7 @@ function loop(timestamp) {
     const KEYBOARD_SPEED = 7;
     if (keys['ArrowLeft']  || keys['KeyA']) state.box.targetX -= KEYBOARD_SPEED;
     if (keys['ArrowRight'] || keys['KeyD']) state.box.targetX += KEYBOARD_SPEED;
-    if (mouseX >= 0) state.box.targetX = mouseX;
+    if (usingMouse && mouseX >= 0) state.box.targetX = mouseX;
 
     state.box.targetX = clamp(state.box.targetX, state.box.w / 2, canvas.width - state.box.w / 2);
     state.box.x += (state.box.targetX - state.box.x) * 0.18;
@@ -620,6 +624,12 @@ document.getElementById('btnHomeGameover').addEventListener('click', () => {
 
 // Keyboard pause / resume
 document.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    // Switch to keyboard mode when arrow keys are pressed
+    if (e.code === 'ArrowLeft' || e.code === 'ArrowRight' ||
+        e.code === 'KeyA'      || e.code === 'KeyD') {
+        usingMouse = false;
+    }
     if (e.code === 'Escape' || e.code === 'KeyP') {
         if (screens.game.classList.contains('active') && !state.over) {
             state.paused = true;
