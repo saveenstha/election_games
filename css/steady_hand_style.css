@@ -28,7 +28,7 @@ html, body {
     background: var(--desk);
     font-family: var(--font-en);
     color: var(--ink);
-    cursor: none;
+    cursor: default;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
