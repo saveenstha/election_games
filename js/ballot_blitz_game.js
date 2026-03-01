@@ -615,7 +615,7 @@ document.getElementById('btnRestart').addEventListener('click', initGame);
 // Home button navigates to the main home page
 document.getElementById('btnHomeGameover').addEventListener('click', () => {
     cancelAnimationFrame(animId);
-    window.location.href = 'index.html';
+    showScreen('start');
 });
 
 // Keyboard pause / resume
