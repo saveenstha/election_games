@@ -493,8 +493,8 @@ button {
 }
 
 .instr-icon {
-    width: 65px;
-    height: 65 px;
+    width: 45px;
+    height: 45 px;
     object-fit: contain;
     flex-shrink: 0;
 }
