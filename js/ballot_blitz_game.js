@@ -1,5 +1,10 @@
 /* =============================================
    BALLOT BOX BLITZ — Game Engine
+   All updates applied:
+   - Infinite levels with scaling speed/spawn
+   - Custom balloon images with emoji fallback
+   - Home button navigates to index.html
+   - Canvas sizes correctly on first load
    ============================================= */
 
 // ── DOM References ──────────────────────────────
@@ -19,6 +24,22 @@ const hudBest     = document.getElementById('hudBest');
 const hudLives    = document.getElementById('hudLives');
 const hudLevel    = document.getElementById('hudLevel');
 
+// ── Preload Balloon Images ───────────────────────
+// Place your images in an images/ folder.
+// Falls back to emoji if images are missing.
+const BALLOON_IMAGES = {};
+const imageFiles = {
+    valid:   'images/ballot-valid.png',
+    golden:  'images/ballot-golden.png',
+    spoiled: 'images/ballot-spoiled.png',
+    bomb:    'images/ballot-bomb.png',
+};
+Object.entries(imageFiles).forEach(([key, src]) => {
+    const img = new Image();
+    img.src = src;
+    BALLOON_IMAGES[key] = img;
+});
+
 // ── Game State ──────────────────────────────────
 let state = {};
 let animId = null;
@@ -26,18 +47,20 @@ let lastTime = 0;
 let bestScore = parseInt(localStorage.getItem('bbBest') || '0');
 
 const BALLOON_TYPES = {
-    valid:   { emoji: '✅', label: 'VALID',   color: '#2DC653', points: +10, hitsLife: false, isBomb: false, weight: 50 },
-    golden:  { emoji: '⭐', label: 'GOLDEN',  color: '#FFD60A', points: +30, hitsLife: false, isBomb: false, weight: 8  },
+    valid:   { emoji: '✅', label: 'VALID',   color: '#2DC653', points: +20, hitsLife: false, isBomb: false, weight: 50 },
+    golden:  { emoji: '⭐', label: 'GOLDEN',  color: '#FFD60A', points: +50, hitsLife: false, isBomb: false, weight: 8  },
     spoiled: { emoji: '❌', label: 'SPOILED', color: '#E63946', points:   0, hitsLife: true,  isBomb: false, weight: 28 },
     bomb:    { emoji: '💣', label: 'BOMB',    color: '#FF6B35', points: -20, hitsLife: false, isBomb: true,  weight: 14 },
 };
 
+// ── Infinite Level Scaling ───────────────────────
+// Speed grows forever. Spawn rate floors at 300ms. Max items caps at 40.
 function getLevelConfig(level) {
     const l = level - 1; // 0-based
     return {
-        speed:     3 + l * 0.55  + Math.floor(l / 5) * 0.4,
+        speed:     1.8 + l * 0.55 + Math.floor(l / 5) * 0.4,
         spawnRate: Math.max(300, 1800 - l * 120),
-        maxItems:  Math.min(5  + l * 2, 40),
+        maxItems:  Math.min(5 + l * 2, 40),
     };
 }
 
@@ -102,18 +125,18 @@ function resizeCanvas() {
     const gameDiv = document.getElementById('screen-game');
     const hud     = document.querySelector('.hud');
     const legend  = document.querySelector('.legend');
-
     // Use window dimensions as fallback when screen-game is not yet visible
     canvas.width  = gameDiv.clientWidth  || window.innerWidth;
     canvas.height = (gameDiv.clientHeight || window.innerHeight)
-                    - (hud     ? hud.offsetHeight     : 0)
-                    - (legend  ? legend.offsetHeight  : 0);
+                    - (hud    ? hud.offsetHeight    : 0)
+                    - (legend ? legend.offsetHeight : 0);
 }
 
 // ── Game Init ────────────────────────────────────
 function initGame() {
-    showScreen('game');
-    resizeCanvas();
+    showScreen('game');   // show FIRST so clientWidth/Height are available
+    resizeCanvas();       // now dimensions are correct
+
     state = {
         score:       0,
         lives:       MAX_LIVES,
@@ -126,13 +149,13 @@ function initGame() {
         spawnTimer:  0,
         levelTimer:  0,
         box: {
-            x: canvas.width / 2,
-            y: canvas.height - 50,
-            w: 120,
-            h: 60,
+            x:       canvas.width / 2,
+            y:       canvas.height - 50,
+            w:       120,
+            h:       60,
             targetX: canvas.width / 2,
         },
-        bgStars: generateBgStars(),
+        bgStars:    generateBgStars(),
         flashTimer: 0,
         flashColor: '',
     };
@@ -148,7 +171,12 @@ function initGame() {
 function generateBgStars() {
     const stars = [];
     for (let i = 0; i < 80; i++) {
-        stars.push({ x: rnd(0, canvas.width), y: rnd(0, canvas.height), r: rnd(0.5, 2), a: rnd(0.1, 0.5) });
+        stars.push({
+            x: rnd(0, canvas.width),
+            y: rnd(0, canvas.height),
+            r: rnd(0.5, 2),
+            a: rnd(0.1, 0.5),
+        });
     }
     return stars;
 }
@@ -173,28 +201,28 @@ document.addEventListener('keyup',   e => { keys[e.code] = false; });
 
 // ── Spawning ─────────────────────────────────────
 function spawnItem() {
-    const cfg  = getLevelConfig(state.level);
+    const cfg = getLevelConfig(state.level);
     if (state.items.length >= cfg.maxItems) return;
 
-    const type    = weightedRandom(BALLOON_TYPES);
+    const type     = weightedRandom(BALLOON_TYPES);
     const typeData = BALLOON_TYPES[type];
-    const size    = rndInt(36, 54);
-    const speed   = rnd(cfg.speed * 0.7, cfg.speed * 1.3);
+    const size     = rndInt(36, 54);
+    const speed    = rnd(cfg.speed * 0.7, cfg.speed * 1.3);
 
     state.items.push({
         type,
-        x:      rnd(size, canvas.width - size),
-        y:      -size,
+        x:           rnd(size, canvas.width - size),
+        y:           -size,
         size,
         speed,
-        wobble: rnd(0, Math.PI * 2),
+        wobble:      rnd(0, Math.PI * 2),
         wobbleSpeed: rnd(0.02, 0.06),
         wobbleAmp:   rnd(0.5, 2.5),
-        rotation: 0,
-        rotSpeed: rnd(-0.04, 0.04),
-        emoji:    typeData.emoji,
-        color:    typeData.color,
-        alive:    true,
+        rotation:    0,
+        rotSpeed:    rnd(-0.04, 0.04),
+        emoji:       typeData.emoji,
+        color:       typeData.color,
+        alive:       true,
     });
 }
 
@@ -205,9 +233,9 @@ function spawnParticles(x, y, color, count = 12) {
         const speed = rnd(2, 7);
         state.particles.push({
             x, y,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed,
-            r:  rnd(3, 8),
+            vx:    Math.cos(angle) * speed,
+            vy:    Math.sin(angle) * speed,
+            r:     rnd(3, 8),
             color,
             alpha: 1,
             decay: rnd(0.03, 0.07),
@@ -241,7 +269,7 @@ function updateHUD() {
 // ── Level Up ─────────────────────────────────────
 function checkLevelUp() {
     const newLevel = Math.floor(state.score / POINTS_PER_LEVEL) + 1;
-    if (newLevel > state.level) {   // ← removed the upper cap entirely
+    if (newLevel > state.level) {   // no upper cap — infinite levels
         state.level = newLevel;
         updateHUD();
         showLevelUp(newLevel);
@@ -250,26 +278,38 @@ function checkLevelUp() {
 
 function showLevelUp(lvl) {
     const msgs = [
-        '', '', 'THINGS ARE HEATING UP!', 'DEMOCRACY IN OVERDRIVE!',
-        'POLLS ARE WILD TODAY!', 'BALLOT CHAOS INCOMING!',
-        'YOU\'RE UNSTOPPABLE!', 'LEGENDARY VOTE CATCHER!',
+        '',
+        '',
+        'THINGS ARE HEATING UP!',
+        'DEMOCRACY IN OVERDRIVE!',
+        'POLLS ARE WILD TODAY!',
+        'BALLOT CHAOS INCOMING!',
+        'YOU\'RE UNSTOPPABLE!',
+        'LEGENDARY VOTE CATCHER!',
+        'ABSOLUTE CHAOS!',
+        'BALLOT SINGULARITY!',
+        'BEYOND DEMOCRACY!',
+        'INFINITE ELECTIONS!',
     ];
+
+    // Cycle through the last 4 messages for levels beyond the array
     const msgIndex = lvl < msgs.length
         ? lvl
         : ((lvl - msgs.length) % 4) + (msgs.length - 4);
 
-
     document.getElementById('levelupText').textContent = `LEVEL ${lvl}`;
-    document.getElementById('levelup-sub') && (document.getElementById('levelup-sub').textContent = msgs[lvl] || 'KEEP GOING!');
+
     const sub = screens.levelup.querySelector('.levelup-sub');
     if (sub) sub.textContent = msgs[msgIndex] || 'KEEP GOING!';
 
     screens.levelup.classList.add('active');
+
     // Reset animation
     const blast = screens.levelup.querySelector('.levelup-blast');
     blast.style.animation = 'none';
     blast.offsetHeight; // reflow
     blast.style.animation = '';
+
     setTimeout(() => screens.levelup.classList.remove('active'), 1600);
 }
 
@@ -283,9 +323,9 @@ function gameOver() {
         localStorage.setItem('bbBest', bestScore);
     }
 
-    const emojis  = ['📦', '🗳️', '🏛️', '🎉'];
-    const titles   = ['POLLS CLOSED!', 'VOTES COUNTED!', 'ELECTION OVER!', 'BALLOT BLITZED!'];
-    const msgs     = [
+    const emojis = ['📦', '🗳️', '🏛️', '🎉'];
+    const titles = ['POLLS CLOSED!', 'VOTES COUNTED!', 'ELECTION OVER!', 'BALLOT BLITZED!'];
+    const msgs   = [
         'The counting is done. Democracy survived!',
         'Every ballot matters — even the ones you dropped.',
         'The people have spoken. So has gravity.',
@@ -293,13 +333,13 @@ function gameOver() {
     ];
     const idx = rndInt(0, 3);
 
-    document.getElementById('gameoverEmoji').textContent  = emojis[idx];
-    document.getElementById('gameoverTitle').textContent  = titles[idx];
-    document.getElementById('gameoverMsg').textContent    = msgs[idx];
-    document.getElementById('finalScore').textContent     = state.score;
-    document.getElementById('finalBest').textContent      = bestScore;
-    document.getElementById('finalLevel').textContent     = state.level;
-    document.getElementById('finalCaught').textContent    = state.caught;
+    document.getElementById('gameoverEmoji').textContent = emojis[idx];
+    document.getElementById('gameoverTitle').textContent = titles[idx];
+    document.getElementById('gameoverMsg').textContent   = msgs[idx];
+    document.getElementById('finalScore').textContent    = state.score;
+    document.getElementById('finalBest').textContent     = bestScore;
+    document.getElementById('finalLevel').textContent    = state.level;
+    document.getElementById('finalCaught').textContent   = state.caught;
 
     showScreen('gameover');
 }
@@ -340,7 +380,7 @@ function loop(timestamp) {
         item.rotation += item.rotSpeed;
         item.x = clamp(item.x, item.size, canvas.width - item.size);
 
-        // Hit box
+        // Hit detection
         if (item.alive && !item.caught) {
             const bx = state.box.x;
             const by = state.box.y;
@@ -357,16 +397,13 @@ function loop(timestamp) {
                 const td = BALLOON_TYPES[item.type];
 
                 if (td.hitsLife) {
-                    // Spoiled ballot — lose life
                     state.lives = Math.max(0, state.lives - 1);
                     state.flashTimer = 300;
                     state.flashColor = 'rgba(230,57,70,0.3)';
                     spawnParticles(item.x, item.y, td.color, 16);
                     showPopup(item.x, item.y, '💔 -LIFE', 'negative');
                     updateHUD();
-                    if (state.lives <= 0) {
-                        setTimeout(gameOver, 300);
-                    }
+                    if (state.lives <= 0) setTimeout(gameOver, 300);
                 } else {
                     state.score = Math.max(0, state.score + td.points);
                     state.caught++;
@@ -388,30 +425,28 @@ function loop(timestamp) {
             }
         }
 
-        // Missed — fell off screen
+        // Fell off screen
         if (item.y > canvas.height + item.size * 2) {
-            item.caught = true; // mark as done
+            item.caught = true;
             if (item.type === 'valid' || item.type === 'golden') {
-                // Missed valid ballot — small penalty flash
                 state.flashTimer = 150;
                 state.flashColor = 'rgba(255,214,10,0.1)';
             }
         }
     });
 
-    // Clean up caught/missed items
-    state.items = state.items.filter(i => !i.caught && i.y < canvas.height + 100);
+    // Clean up
+    state.items      = state.items.filter(i => !i.caught && i.y < canvas.height + 100);
+    state.particles  = state.particles.filter(p => p.alpha > 0);
 
     // Update particles
     state.particles.forEach(p => {
-        p.x     += p.vx;
-        p.y     += p.vy;
-        p.vy    += 0.25; // gravity
+        p.x    += p.vx;
+        p.y    += p.vy;
+        p.vy   += 0.25; // gravity
         p.alpha -= p.decay;
     });
-    state.particles = state.particles.filter(p => p.alpha > 0);
 
-    // Draw
     draw();
     animId = requestAnimationFrame(loop);
 }
@@ -422,11 +457,11 @@ function draw() {
     ctx.fillStyle = '#0D1B2A';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Twinkling stars in background
+    // Background stars
     if (state.bgStars) {
         state.bgStars.forEach(s => {
             ctx.globalAlpha = s.a;
-            ctx.fillStyle = '#FFFFFF';
+            ctx.fillStyle   = '#FFFFFF';
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
             ctx.fill();
@@ -442,7 +477,7 @@ function draw() {
 
     // Ground line
     ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = 1;
+    ctx.lineWidth   = 1;
     ctx.setLineDash([8, 12]);
     ctx.beginPath();
     ctx.moveTo(0, state.box.y + state.box.h / 2 + 2);
@@ -466,11 +501,11 @@ function draw() {
         ctx.translate(item.x, item.y);
         ctx.rotate(item.rotation);
 
-        // Shadow
+        // Glow
         ctx.shadowColor = item.color;
         ctx.shadowBlur  = 14;
 
-        // Glow circle for golden
+        // Extra glow ring for golden ballots
         if (item.type === 'golden') {
             ctx.fillStyle = 'rgba(255,214,10,0.15)';
             ctx.beginPath();
@@ -478,12 +513,18 @@ function draw() {
             ctx.fill();
         }
 
-        // Emoji
-        ctx.font      = `${item.size}px serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
         ctx.shadowBlur = 0;
-        ctx.fillText(item.emoji, 0, 0);
+
+        // Draw image if loaded, otherwise fall back to emoji
+        const img = BALLOON_IMAGES[item.type];
+        if (img && img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, -item.size / 2, -item.size / 2, item.size, item.size);
+        } else {
+            ctx.font             = `${item.size}px serif`;
+            ctx.textAlign        = 'center';
+            ctx.textBaseline     = 'middle';
+            ctx.fillText(item.emoji, 0, 0);
+        }
 
         ctx.restore();
     });
@@ -497,17 +538,14 @@ function drawBox(cx, cy, w, h) {
     const y = cy - h / 2;
     const r = 8;
 
-    // Box shadow
     ctx.shadowColor = 'rgba(69,123,157,0.6)';
     ctx.shadowBlur  = 20;
 
-    // Box body
     ctx.fillStyle = '#1D3557';
     roundRect(ctx, x, y, w, h, r);
     ctx.fill();
 
-    // Box border
-    ctx.shadowBlur = 0;
+    ctx.shadowBlur  = 0;
     ctx.strokeStyle = '#457B9D';
     ctx.lineWidth   = 3;
     roundRect(ctx, x, y, w, h, r);
@@ -528,10 +566,10 @@ function drawBox(cx, cy, w, h) {
     ctx.lineTo(x + w - r, y + h * 0.38);
     ctx.stroke();
 
-    // 🗳️ emoji label
-    ctx.font         = `${Math.floor(h * 0.38)}px serif`;
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'middle';
+    // Box emoji label
+    ctx.font             = `${Math.floor(h * 0.38)}px serif`;
+    ctx.textAlign        = 'center';
+    ctx.textBaseline     = 'middle';
     ctx.fillText('🗳️', cx, cy + h * 0.15);
 
     ctx.shadowBlur = 0;
@@ -541,13 +579,13 @@ function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
     ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.quadraticCurveTo(x + w, y,     x + w, y + r);
     ctx.lineTo(x + w, y + h - r);
     ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
     ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.quadraticCurveTo(x,     y + h, x, y + h - r);
     ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.quadraticCurveTo(x,     y,     x + r, y);
     ctx.closePath();
 }
 
@@ -566,6 +604,7 @@ document.getElementById('btnResume').addEventListener('click', () => {
     animId = requestAnimationFrame(loop);
 });
 
+// Quit goes back to Ballot Blitz start screen
 document.getElementById('btnQuit').addEventListener('click', () => {
     cancelAnimationFrame(animId);
     showScreen('start');
@@ -573,12 +612,13 @@ document.getElementById('btnQuit').addEventListener('click', () => {
 
 document.getElementById('btnRestart').addEventListener('click', initGame);
 
-document.getElementById('btnHome').addEventListener('click', () => {
+// Home button navigates to the main home page
+document.getElementById('btnHomeGameover').addEventListener('click', () => {
     cancelAnimationFrame(animId);
     window.location.href = 'index.html';
 });
 
-// Keyboard pause
+// Keyboard pause / resume
 document.addEventListener('keydown', e => {
     if (e.code === 'Escape' || e.code === 'KeyP') {
         if (screens.game.classList.contains('active') && !state.over) {
@@ -593,12 +633,12 @@ document.addEventListener('keydown', e => {
     }
 });
 
-// ── Window resize ────────────────────────────────
+// ── Window Resize ────────────────────────────────
 window.addEventListener('resize', () => {
     if (screens.game.classList.contains('active')) {
         resizeCanvas();
-        state.box.y = canvas.height - 50;
-        state.bgStars = generateBgStars();
+        state.box.y      = canvas.height - 50;
+        state.bgStars    = generateBgStars();
     }
 });
 
